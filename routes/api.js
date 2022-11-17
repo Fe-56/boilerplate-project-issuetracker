@@ -21,7 +21,8 @@ module.exports = function (app) {
       let statusText = req.body.status_text;
       let json;
 
-      if (issueTitle == null || issueText == null || createdBy == null){ // if there are any missing required field(s)
+      if (issueTitle == null || issueText == null || createdBy == null
+         || issueTitle === "" || issueText === "" || createdBy === ""){ // if there are any missing required field(s)
         json = {
           error: 'required field(s) missing'
         }
@@ -44,26 +45,45 @@ module.exports = function (app) {
       let open = req.body.open;
       let json;
 
-      if (id == null){
-        res.json({
+      if (id === '' || id == null){
+        json = {
           error: 'missing _id'
-        }) ;
+        };
       }
-      else if (Object.keys(req.body).length < 2){
-        res.json({
-            error: 'no update field(s) sent',
-            _id: id
-        });
+      else if (
+        (issueTitle === '' || issueTitle == null) &&
+        (issueText === '' || issueText == null) &&
+        (createdBy === '' || createdBy == null) &&
+        (assignedTo === '' || assignedTo == null) &&
+        (statusText === '' || statusText == null) &&
+        (open === '' || open == null)
+      ){
+        json = {
+          error: 'no update field(s) sent',
+          _id: id
+        };
       }
       else{
+        open = (open == null) ? true : false;
         json = await database.updateIssue(project, id, issueTitle, issueText, createdBy, assignedTo, statusText, open);
-        res.json(json);
       }
+      res.json(json);
     })
     
-    .delete(function (req, res){
+    .delete(async function (req, res){
       let project = req.params.project;
+      let id = req.body._id;
+      let json;
+
+      if (id == null){
+        json = {
+          error: 'missing _id'
+        };
+      }
+      else{
+        json = await database.deleteIssue(id);
+      }
       
+      res.json(json);
     });
-    
 };

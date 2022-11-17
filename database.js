@@ -163,33 +163,39 @@ async function updateIssue(project, id, issueTitle, issueText, createdBy, assign
   const update = {
     $set: object
   };
-
-  console.log(`findOne: ${await collection.findOne(query)}`);
+  const existingIssue = (await collection.findOne(query) == null) ? false : true;
   
-  await collection.findOneAndUpdate(query, update, (error, document) => {
-    
-  })
-    // .then(output = {
-    //     result: 'successfully updated',
-    //     _id: id
-    // })
-    // .catch((error) => {
-    //   console.error(error);
-    //   output = {
-    //     error: 'could not update',
-    //     _id: id
-    //   }
-    // });
+  if (existingIssue){
+    await collection.findOneAndUpdate(query, update)
+      .then(output = {
+          result: 'successfully updated',
+          _id: id
+      })
+      .catch((error) => {
+        console.error(error);
+        output = {
+          error: 'could not update',
+          _id: id
+        }
+      });
+  }
+  else{
+    output = {
+      error: 'could not update',
+      _id: id
+    }
+  }
+
   return output;
 }
 
-async function deleteIssue(project, id){
+async function deleteIssue(id){
   const collection = getCollection();
   let query;
 
   try{
     query = {
-      id
+      _id: new ObjectId(id)
     };
   }
   catch (error){
@@ -200,19 +206,30 @@ async function deleteIssue(project, id){
     }
   }
 
+  const existingIssue = (await collection.findOne(query) == null) ? false : true;
   let output;
-  await collection.findOneAndDelete(query)
-    .then(output = {
-      result: 'successfully deleted',
-      _id: id
-    })
-    .catch((error) => {
-      console.error(error);
-      output = {
-        error: 'could not delete',
+  
+  if (existingIssue){
+    await collection.findOneAndDelete(query)
+      .then(output = {
+        result: 'successfully deleted',
         _id: id
-      }
-    });
+      })
+      .catch((error) => {
+        console.error(error);
+        output = {
+          error: 'could not delete',
+          _id: id
+        }
+      });
+  }
+  else{
+    output = {
+      error: 'could not delete',
+      _id: id
+    }
+  }
+
   return output;
 }
 
